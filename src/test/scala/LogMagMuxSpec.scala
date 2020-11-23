@@ -22,7 +22,9 @@ class LogMagMuxSpec extends FlatSpec with Matchers {
           val v = abs(e.real).min(abs(e.imag))
           val jpl = (u + v/8).max(7 * u/8 + v/2)
           val magSqr = e.real * e.real + e.imag * e.imag
-          Seq(e, Complex(magSqr, 0.0), Complex(jpl, 0.0), Complex(log(jpl)/log(2), 0.0))
+        // just tmp switch because of axi 4 stream nodes and accumulator - fix this in the future
+        //  Seq(e, Complex(magSqr, 0.0), Complex(jpl, 0.0), Complex(log(jpl)/log(2), 0.0))
+           Seq(e, Complex(0.0, magSqr), Complex(0.0, jpl), Complex(0.0, log(jpl)/log(2)))
         }
     }.toSeq
     (inp, out)
@@ -57,7 +59,8 @@ class LogMagMuxSpec extends FlatSpec with Matchers {
           val jpl = (u + v/8).max(7 * u/8 + v/2)
           // do not care about mag squared
           val magSqr = e.real * e.real + e.imag * e.imag
-          Seq(e, Complex(magSqr, 0.0), Complex(jpl, 0.0), Complex(log(jpl)/log(2), 0.0))
+         // Seq(e, Complex(magSqr, 0.0), Complex(jpl, 0.0), Complex(log(jpl)/log(2), 0.0))
+          Seq(e, Complex(0.0, magSqr), Complex(0.0, jpl), Complex(0.0, log(jpl)/log(2)))
         }
     }.toSeq
     FixedMagTester(base_params, inpInt, outInt) should be (true)

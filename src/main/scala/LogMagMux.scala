@@ -143,17 +143,23 @@ class LogMagMux[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]
 //   log2Mag.suggestName("log2Mag")
 //   
   val magSqrOut = Wire(params.proto)
-  magSqrOut.real := magSqr
-  magSqrOut.imag := Real[T].fromDouble(0.0)
+//   magSqrOut.real := magSqr
+//   magSqrOut.imag := Real[T].fromDouble(0.0)
+  magSqrOut.imag := magSqr
+  magSqrOut.real := Real[T].fromDouble(0.0)
   
   val jplMagOut = Wire(params.proto)
-  jplMagOut.real := jplMag
-  jplMagOut.imag := Real[T].fromDouble(0.0)
+//   jplMagOut.real := jplMag
+//   jplMagOut.imag := Real[T].fromDouble(0.0)
+  jplMagOut.imag := jplMag
+  jplMagOut.real := Real[T].fromDouble(0.0)
   
   val log2MagOut = Wire(params.proto)
-  log2MagOut.real := log2Mag.asTypeOf(params.proto.real)
-  log2MagOut.imag := Real[T].fromDouble(0.0)
-
+//   log2MagOut.real := log2Mag.asTypeOf(params.proto.real)
+//   log2MagOut.imag := Real[T].fromDouble(0.0)
+  log2MagOut.imag := log2Mag.asTypeOf(params.proto.real)
+  log2MagOut.real := Real[T].fromDouble(0.0)
+  
   val output = MuxLookup(ShiftRegister(io.sel, latency, en = true.B), io.in.bits,
                       Array(0.U -> ShiftRegister(io.in.bits, latency, true.B),
                             1.U -> magSqrOut,
