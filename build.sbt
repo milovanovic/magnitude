@@ -42,4 +42,5 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= scalacOptionsVersion(scalaVersion.value)
+scalacOptions += "-Ywarn-unused-import"
 javacOptions ++= javacOptionsVersion(scalaVersion.value)
