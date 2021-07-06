@@ -71,6 +71,8 @@ Tester functions such as `peek`, `poke` and `except`, available inside `DspTeste
 
 ## TODO
 
+* Made sel signal optional and adjust README file to follow this generator
+* Change block diagram
 * Define logic for saturation and overflow (this is in direct connection with this [pull request](https://github.com/ucb-bar/dsptools/pull/189))
 * Analyze lookUp table width impact on `log2 `calculation precision
 
