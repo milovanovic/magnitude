@@ -152,8 +152,9 @@ class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
   // for JPL approximation
   val u = Real[T].max(absInReal, absInImag)
   val v = Real[T].min(absInReal, absInImag)
-  val magSqr = Wire(params.protoOut)
-  
+
+  // IMPORTANT: try to use div2 with trim type not shr, i guess that better precision can be achieved
+  // IMPORTANT: check data width size of jplMag
   val jplMagOp1 = DspContext.withNumAddPipes(2*numAddPipes) { // to be aligned with jplMagOp2
                             u context_+ BinaryRepresentation[T].shr(v,3) } // U + V/8
   val tmpOp2 = DspContext.withNumAddPipes(numAddPipes) { u context_- BinaryRepresentation[T].shr(u,3) }
@@ -162,16 +163,25 @@ class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
                             tmpOp2 context_+  ShiftRegister(BinaryRepresentation[T].shr(v, 1), numAddPipes, true.B) }  // (7/8)*U + 1/2*V
   val last = RegInit(false.B)
   
-  magSqr := DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes,  numMulPipes = numMulPipes)) {
+  val magSqr = DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes,  numMulPipes = numMulPipes, binaryPointGrowth = 0)) {
                        ShiftRegister((absInReal context_* absInReal) context_+ (absInImag context_* absInImag), latency - magSqrLatency, true.B)}
-  
+  dontTouch(magSqr)
+  magSqr.suggestName("squared_magnitude")
+
+  val trimNum = magSqr.getWidth - params.protoOut.getWidth
+  require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
+
+  val trimMagSqr = DspContext.alter(DspContext.current.copy(trimType = params.trimType, binaryPointGrowth = 0)){ magSqr.div2(trimNum) }
+  dontTouch(trimMagSqr)
+  trimMagSqr.suggestName("trim_squared_magnitude")
+
   val jplMagtmp = Real[T].max(jplMagOp1, jplMagOp2)
   val jplMag = ShiftRegister(jplMagtmp, latency - jplMagLatency, true.B)
   
   val output = Wire(params.protoOut.cloneType)
   
   output := MuxLookup(ShiftRegister(io.sel, latency, en = true.B), jplMag,
-                  Array(0.U -> magSqr,
+                  Array(0.U -> trimMagSqr.asTypeOf(params.protoOut),
                         1.U -> jplMag))
   
   val skidInData = Wire(io.out.cloneType)
@@ -309,7 +319,7 @@ class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParam
   // for JPL approximation
   val u = Real[T].max(absInReal, absInImag)
   val v = Real[T].min(absInReal, absInImag)
-  val magSqr = Wire(params.protoIn)
+  //val magSqr = Wire(params.protoIn)
   
   val jplMagOp1 = DspContext.withNumAddPipes(2*numAddPipes) { // to be aligned with jplMagOp2
                             u context_+ BinaryRepresentation[T].shr(v,3) } // U + V/8
@@ -318,9 +328,18 @@ class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParam
   val jplMagOp2 = DspContext.withNumAddPipes(numAddPipes) {
                             tmpOp2 context_+  ShiftRegister(BinaryRepresentation[T].shr(v, 1), numAddPipes, true.B) }  // (7/8)*U + 1/2*V
   
-  magSqr := DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes, numMulPipes = numMulPipes)) {
+  val magSqr = DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes,  numMulPipes = numMulPipes, binaryPointGrowth = 0)) {
                        ShiftRegister((absInReal context_* absInReal) context_+ (absInImag context_* absInImag), latency - magSqrLatency, true.B)}
-  
+  dontTouch(magSqr)
+  magSqr.suggestName("squared_magnitude")
+
+  val trimNum = magSqr.getWidth - params.protoOut.getWidth
+  require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
+
+  val trimMagSqr = DspContext.alter(DspContext.current.copy(trimType = params.trimType, binaryPointGrowth = 0)){ magSqr.div2(trimNum) }
+  dontTouch(trimMagSqr)
+  trimMagSqr.suggestName("trim_squared_magnitude")
+
   val jplMagtmp = Real[T].max(jplMagOp1, jplMagOp2)
   val jplMag = ShiftRegister(jplMagtmp, latency - jplMagLatency, true.B)
   // log(N) = k + log2(1 + f)
@@ -357,7 +376,7 @@ class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParam
   val output = Wire(params.protoOut.cloneType)
   
   output := MuxLookup(ShiftRegister(io.sel, latency, en = true.B), jplMag,
-                Array(0.U -> magSqr,
+                Array(0.U -> trimMagSqr.asTypeOf(params.protoOut),
                       1.U -> jplMag,
                       2.U -> log2Mag))
   
