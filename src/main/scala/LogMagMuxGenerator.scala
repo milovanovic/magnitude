@@ -19,14 +19,15 @@ case object MagJPLandLogMag extends MagType
 case object LogMagMux extends MagType // Mux, this type of the design provides MagJPL, MagSqr, LogMag
 
 case class MAGParams[T <: Data] (
-  val protoIn         : T,                   // type of the real and imag part of the input data
-  val protoOut        : T,                   // output data type
+  val protoIn         : T,                      // type of the real and imag part of the input data
+  val protoOut        : T,                      // output data type
   val protoLog        : Option[T] = None,
-  val magType         : MagType = LogMagMux, // include different magnitude types
-  val log2LookUpWidth : Int = 16,            // number of bits that are input address at look_up_table
-  val useLast         : Boolean = true ,     // use lastIn and lastOut AXI signals
-  val numAddPipes     : Int = 1,             // number of pipeline registers after + operation
-  val numMulPipes     : Int = 1              // number of pipeline registers after * operation
+  val magType         : MagType = LogMagMux,    // include different magnitude types
+  val log2LookUpWidth : Int = 16,               // number of bits that are input address at look_up_table
+  val useLast         : Boolean = true ,        // use lastIn and lastOut AXI signals
+  val numAddPipes     : Int = 1,                // number of pipeline registers after + operation
+  val numMulPipes     : Int = 1,                // number of pipeline registers after * operation
+  val trimType        : TrimType = RoundHalfUp // TrimType - used for div2 and trimBinary
 ) {
   requireIsChiselType(protoIn)
   if (((magType == LogMag) || (magType == LogMagMux) || (magType == MagJPLandLogMag))) {
