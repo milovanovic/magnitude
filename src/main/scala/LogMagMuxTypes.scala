@@ -168,8 +168,9 @@ class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
   dontTouch(magSqr)
   magSqr.suggestName("squared_magnitude")
 
-  val trimNum = magSqr.getWidth - params.protoOut.getWidth
-  require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
+  val trimNum = if (magSqr.getWidth - params.protoOut.getWidth > 0) magSqr.getWidth - params.protoOut.getWidth else 0
+  //require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
+  //println(magSqr.getWidth)
 
   val trimMagSqr = DspContext.alter(DspContext.current.copy(trimType = params.trimType, binaryPointGrowth = 0)){ magSqr.div2(trimNum) }
   dontTouch(trimMagSqr)
@@ -333,8 +334,8 @@ class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParam
   dontTouch(magSqr)
   magSqr.suggestName("squared_magnitude")
 
-  val trimNum = magSqr.getWidth - params.protoOut.getWidth
-  require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
+  val trimNum = if (magSqr.getWidth - params.protoOut.getWidth > 0) magSqr.getWidth - params.protoOut.getWidth else 0
+  //require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
 
   val trimMagSqr = DspContext.alter(DspContext.current.copy(trimType = params.trimType, binaryPointGrowth = 0)){ magSqr.div2(trimNum) }
   dontTouch(trimMagSqr)
