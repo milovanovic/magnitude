@@ -78,7 +78,7 @@ abstract class LogMagMuxBlock [T <: Data : Real: BinaryRepresentation, D, U, E, 
         RegFieldDesc(name = "sel", desc = "selection signal for the log magnitude multiplexer")),
       // left for future addition
     )
-    logMagMux.io.sel := selReg
+    logMagMux.io.sel.get := selReg
 
     // Define abstract register map so it can be AXI4, Tilelink, APB, AHB
     regmap(fields.zipWithIndex.map({ case (f, i) => i * beatBytes -> Seq(f)}): _*)

@@ -18,6 +18,7 @@ case object LogMag extends MagType // sel is zero
 case object MagJPLandLogMag extends MagType
 case object LogMagMux extends MagType // Mux, this type of the design provides MagJPL, MagSqr, LogMag
 
+// IMPORTANT TODO: use trim squared magnitude and adjust tests according to that
 case class MAGParams[T <: Data] (
   val protoIn         : T,                      // type of the real and imag part of the input data
   val protoOut        : T,                      // output data type
@@ -27,7 +28,8 @@ case class MAGParams[T <: Data] (
   val useLast         : Boolean = true ,        // use lastIn and lastOut AXI signals
   val numAddPipes     : Int = 1,                // number of pipeline registers after + operation
   val numMulPipes     : Int = 1,                // number of pipeline registers after * operation
-  val trimType        : TrimType = RoundHalfUp // TrimType - used for div2 and trimBinary
+  val binPointGrowth  : Int = 0,                // when multiplication is included (squared magnitude), determines binary point growth logic
+  val trimType        : TrimType = RoundHalfUp  // TrimType - used for div2 and trimBinary
 ) {
   requireIsChiselType(protoIn)
   if (((magType == LogMag) || (magType == LogMagMux) || (magType == MagJPLandLogMag))) {
@@ -39,7 +41,7 @@ class MagMuxIO[T <: Data: Real](val params: MAGParams[T]) extends Bundle {
   val in = Flipped(Decoupled(DspComplex(params.protoIn)))
   val lastIn = if (params.useLast) Some(Input(Bool())) else None
   val out = Decoupled(params.protoOut)
-  val sel = Input(UInt(2.W))
+  val sel = if (params.magType == MagJPLandSqrMag || params.magType == MagJPLandLogMag || params.magType == LogMagMux) Some(Input(UInt(2.W))) else None
   val lastOut = if (params.useLast) Some(Output(Bool())) else None
   
   override def cloneType: this.type = MagMuxIO(params).asInstanceOf[this.type]
@@ -61,8 +63,11 @@ class LogMagMuxGenerator[T <: Data: Real : BinaryRepresentation](val params: MAG
   }
   magModule.io.in <> io.in
   io.out <> magModule.io.out
-  magModule.io.sel := io.sel
-  
+
+  if (params.magType == MagJPLandSqrMag || params.magType == MagJPLandLogMag || params.magType == LogMagMux) {
+    magModule.io.sel.get := io.sel.get
+  }
+
   if (params.useLast) {
     magModule.io.lastIn.get := io.lastIn.get
     io.lastOut.get := magModule.io.lastOut.get
@@ -75,7 +80,7 @@ object LogMagMuxApp extends App
     protoIn  = FixedPoint(16.W, 8.BP),
     protoOut = FixedPoint(16.W, 8.BP), // output thres
     protoLog = Some(FixedPoint(16.W, 8.BP)),
-    magType  = LogMagMux,//MagJPLandLogMag,
+    magType  = MagJPLandSqrMag,//MagJPLandLogMag,
     log2LookUpWidth = 8,
     useLast = true,
     numAddPipes = 1,

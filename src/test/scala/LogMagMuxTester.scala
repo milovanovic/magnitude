@@ -47,17 +47,17 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends DspTester(d
       poke(dut.io.in.bits, inp(index))
 
       println("Magnitude squared:")
-      poke(dut.io.sel, 0)
+      poke(dut.io.sel.get, 0)
       step(latency + 1)
       fixTolLSBs.withValue(6) { expect(dut.io.out.bits, value(0)) }
       
       println("JPL magnitude:")
-      poke(dut.io.sel, 1)
+      poke(dut.io.sel.get, 1)
       step(latency + 1)
       fixTolLSBs.withValue(tolLSBs) { expect(dut.io.out.bits, value(1)) }
 
       println("Log2 magnitude:")
-      poke(dut.io.sel, 2)
+      poke(dut.io.sel.get, 2)
       step(latency + 1)
       val outTmp = peek(dut.io.out.bits)
       fixTolLSBs.withValue(tolLSBs) { expect(dut.io.out.bits, value(2) * mulLog) }
@@ -72,7 +72,7 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends DspTester(d
     
     val genIn = dut.params.protoIn
     val genLog = dut.params.protoLog.getOrElse(genIn)
-    
+
     val dataWidth = genIn.getWidth
     val bposIn = (genIn match {
       case fp: FixedPoint => fp.binaryPoint.get
@@ -94,7 +94,9 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends DspTester(d
     var cntValidIn = 0
     
     poke(dut.io.in.valid, 1)
-    poke(dut.io.sel, sel)
+    if (dut.params.magType == MagJPLandSqrMag || dut.params.magType == MagJPLandLogMag || dut.params.magType == LogMagMux) {
+      poke(dut.io.sel.get, sel)
+    }
     
     // fill pipes and then enable output side
     while (input.hasNext && peek(dut.io.in.ready)) {
@@ -186,6 +188,91 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends DspTester(d
     }
     step(5)
     cntValidOut = 0
+  }
+
+  def testStreamCollectOut(inp: Seq[Complex], sel: Int, out: Seq[Double], tolLSBs: Int = 3): Seq[Double] = {
+    require(dut.params.useLast, "This test must have included lastIn and lastOut signal")
+    var collectedOut = Seq[Double]()
+    val genIn = dut.params.protoIn
+    val genLog = dut.params.protoLog.getOrElse(genIn)
+
+    val dataWidth = genIn.getWidth
+    val bposIn = (genIn match {
+      case fp: FixedPoint => fp.binaryPoint.get
+      case _ => 0
+    })
+
+    val bposLog = (genLog match {
+      case fp: FixedPoint => fp.binaryPoint.get
+      case _ => 0
+    })
+
+    val mulLog = if (bposIn > bposLog) math.pow(2, bposIn - bposLog) else 1
+
+//    println("Expected result should be: ")
+//    out.map(c => println(dut.toString))
+
+    val input = inp.iterator
+    var cntValidOut = 0
+    var cntValidIn = 0
+
+    poke(dut.io.in.valid, 1)
+    if (dut.params.magType == MagJPLandSqrMag || dut.params.magType == MagJPLandLogMag || dut.params.magType == LogMagMux) {
+      poke(dut.io.sel.get, sel)
+    }
+
+    // fill pipes and then enable output side
+    while (input.hasNext && peek(dut.io.in.ready)) {
+      if (cntValidIn == (inp.length - 1)) {
+        poke(dut.io.in.bits, input.next())
+        poke(dut.io.lastIn.get, 1)
+      }
+      else {
+        poke(dut.io.in.bits, input.next())
+      }
+      cntValidIn += 1
+      step(1)
+    }
+
+    poke(dut.io.lastIn.get, 0)
+    step(10)
+    poke(dut.io.out.ready, 1)
+
+    while (cntValidOut < out.length) {
+      if (input.hasNext) {
+        if (cntValidIn == (inp.length - 1)) {
+          poke(dut.io.in.bits, input.next())
+          poke(dut.io.lastIn.get, 1)
+        }
+        else {
+          poke(dut.io.in.bits, input.next())
+        }
+        cntValidIn += 1
+      }
+      else {
+        poke(dut.io.in.valid, 0)
+        poke(dut.io.lastIn.get, 0)
+      }
+      if (peek(dut.io.out.valid)) {
+        if (cntValidOut == (out.length - 1)) {
+          fixTolLSBs.withValue(tolLSBs) { expect(dut.io.out.bits, out(cntValidOut)) }
+          expect(dut.io.lastOut.get, 1)
+        }
+        else {
+          fixTolLSBs.withValue(tolLSBs) { expect(dut.io.out.bits, out(cntValidOut)) }
+          expect(dut.io.lastOut.get, 0)
+        }
+        collectedOut = collectedOut :+ peek(dut.io.out.bits)
+        cntValidOut += 1
+      }
+      step(1)
+    }
+    cntValidOut = 0
+
+    poke(dut.io.in.valid, 0)
+    poke(dut.io.out.ready, 0)
+    reset()
+    collectedOut
   }
 }
 

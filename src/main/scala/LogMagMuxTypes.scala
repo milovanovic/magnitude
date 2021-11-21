@@ -163,26 +163,50 @@ class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
                             tmpOp2 context_+  ShiftRegister(BinaryRepresentation[T].shr(v, 1), numAddPipes, true.B) }  // (7/8)*U + 1/2*V
   val last = RegInit(false.B)
   
-  val magSqr = DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes,  numMulPipes = numMulPipes, binaryPointGrowth = 0)) {
+  val bpos = (absInReal.cloneType match {
+        case fp: FixedPoint => fp.binaryPoint.get
+        case _ => 0
+      })
+  // binaryPointGrowth should be set to satisfy binary point growth - extremely important to be defined in a right way
+  //val magSqr = DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes,  numMulPipes = numMulPipes, binaryPointGrowth = 0)) {
+  val magSqr = DspContext.alter(DspContext.current.copy(numAddPipes = numAddPipes,  numMulPipes = numMulPipes, binaryPointGrowth = params.binPointGrowth)) {
                        ShiftRegister((absInReal context_* absInReal) context_+ (absInImag context_* absInImag), latency - magSqrLatency, true.B)}
   dontTouch(magSqr)
   magSqr.suggestName("squared_magnitude")
 
   val trimNum = if (magSqr.getWidth - params.protoOut.getWidth > 0) magSqr.getWidth - params.protoOut.getWidth else 0
   //require(trimNum > 0, "Check core parameters such as protoIn and protoOut, some incompatibilities are detected")
-  //println(magSqr.getWidth)
-
+  println("trimNum is")
+  println(trimNum)
+  println("Total data width is: ")
+  println(magSqr.getWidth)
+  // print binary point
+  val bposMagSqr = (magSqr.cloneType match {
+        case fp: FixedPoint => fp.binaryPoint.get
+        case _ => 0
+      })
+  println("Binary data width is:")
+  println(bposMagSqr
+  )
+  //val trimMagSqr = Wire(params.protoOut.clone)
   val trimMagSqr = DspContext.alter(DspContext.current.copy(trimType = params.trimType, binaryPointGrowth = 0)){ magSqr.div2(trimNum) }
   dontTouch(trimMagSqr)
   trimMagSqr.suggestName("trim_squared_magnitude")
+
+  val bposTrimMagSqr = (trimMagSqr.cloneType match {
+        case fp: FixedPoint => fp.binaryPoint.get
+        case _ => 0
+      })
+  println("Binary data width is:")
+  println(bposTrimMagSqr)
 
   val jplMagtmp = Real[T].max(jplMagOp1, jplMagOp2)
   val jplMag = ShiftRegister(jplMagtmp, latency - jplMagLatency, true.B)
   
   val output = Wire(params.protoOut.cloneType)
   
-  output := MuxLookup(ShiftRegister(io.sel, latency, en = true.B), jplMag,
-                  Array(0.U -> trimMagSqr.asTypeOf(params.protoOut),
+  output := MuxLookup(ShiftRegister(io.sel.get, latency, en = true.B), jplMag,
+                  Array(0.U -> magSqr,//trimMagSqr,//.asTypeOf(params.protoOut),
                         1.U -> jplMag))
   
   val skidInData = Wire(io.out.cloneType)
@@ -267,7 +291,7 @@ class MagJPLandLogMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
   log2Mag := ShiftRegister(logSInt.asFixedPoint(0.BP), numAddPipes, true.B) + logFrac
   
   val output = Wire(params.protoOut.cloneType)
-  output := MuxLookup(ShiftRegister(io.sel, latency, en = true.B), jplMag,
+  output := MuxLookup(ShiftRegister(io.sel.get, latency, en = true.B), jplMag,
                   Array(0.U -> jplMag,
                         1.U -> log2Mag))
 
@@ -376,8 +400,8 @@ class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParam
 
   val output = Wire(params.protoOut.cloneType)
   
-  output := MuxLookup(ShiftRegister(io.sel, latency, en = true.B), jplMag,
-                Array(0.U -> trimMagSqr.asTypeOf(params.protoOut),
+  output := MuxLookup(ShiftRegister(io.sel.get, latency, en = true.B), jplMag,
+                Array(0.U -> magSqr,//trimMagSqr.asTypeOf(params.protoOut),
                       1.U -> jplMag,
                       2.U -> log2Mag))
   

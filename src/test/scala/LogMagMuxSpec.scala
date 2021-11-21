@@ -43,7 +43,8 @@ class LogMagMuxSpec extends FlatSpec with Matchers {
     )
     FixedMagTester(base_params, inp, out) should be (true)
   }
-  
+
+  // IMPORTANT TODO: use trim squared magnitude and adjust tests according to that
   it should f"test LogMagMux module, changing sel signal and numAddPipes = 1, numMulPipes = 1 " in {
     val base_params : MAGParams[FixedPoint] = MAGParams(
       protoIn  = FixedPoint(24.W, 10.BP),
@@ -75,7 +76,7 @@ class LogMagMuxSpec extends FlatSpec with Matchers {
         )
         val outLogMag : Seq[Double] = out.map(c => c(sel))
         // tolerance is 6 because of squared magnitude calculation
-        FixedMagTester(base_params, inp, outLogMag, sel, 6) should be (true)
+        FixedMagTester(base_params, inp, outLogMag, sel, 8) should be (true)
       }
     }
   }
@@ -146,7 +147,7 @@ class LogMagMuxSpec extends FlatSpec with Matchers {
           numMulPipes = mulPipes
         )
         val outMagJPLandSqrMag: Seq[Double] = out.map(c => c(sel))
-        FixedMagTester(base_params, inp, outMagJPLandSqrMag, sel, 6) should be (true)
+        FixedMagTester(base_params, inp, outMagJPLandSqrMag, sel, 8) should be (true)
       }
     }
   }
