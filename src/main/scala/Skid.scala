@@ -28,7 +28,7 @@ object Skid {
     queueCounter := queueCounter +& in.fire() -& out.fire()
     queueCounter.suggestName("queueCounter")
     queue.io.enq.valid := ShiftRegister(in.fire(), latency, resetData = false.B, en = en)
-    assert(!queue.io.enq.valid || queue.io.enq.ready) // we control in.ready such that the queue can't fill up!
+    //assert(!queue.io.enq.valid || queue.io.enq.ready) // we control in.ready such that the queue can't fill up!
 
     // it can shift in one datum and shift out one datum at the same time
     //val latencyToCmp = if ()
