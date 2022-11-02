@@ -50,7 +50,7 @@ abstract class LogMagMuxBlock [T <: Data : Real: BinaryRepresentation, D, U, E, 
   val dataWidthOut = params.protoOut.getWidth
 
   val masterParams = AXI4StreamMasterParameters(
-    name = "AXI4 Stream Accumulator",
+    name = "AXI4 Stream Magnitude block",
     n = (dataWidthOut + 8 - 1) / 8,
     numMasters = 1
   )
