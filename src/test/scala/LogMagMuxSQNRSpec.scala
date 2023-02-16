@@ -1,14 +1,9 @@
 
 package magnitude
 
-import org.scalatest.{FlatSpec, Matchers}
-
-import breeze.plot._
-import breeze.linalg._
 import breeze.math.Complex
 
 import chisel3._
-import chisel3.util._
 import chisel3.experimental._
 
 import scala.math.pow
@@ -17,7 +12,10 @@ import scala.util.{Random}
 import dsptools._
 import dsptools.numbers._
 
-class SqrMagSQNRSpec extends FlatSpec with Matchers {
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class SqrMagSQNRSpec extends AnyFlatSpec with Matchers {
 
   def calc_sqnr(chiselMAG: Seq[Double], scalaMAG: Seq[Double]): Double = {
     import breeze.signal._

@@ -4,14 +4,13 @@ package magnitude
 
 import chisel3._
 import chisel3.experimental._
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
+
 import dsptools.numbers._
 
-import dspblocks._
-import freechips.rocketchip.amba.axi4._
 import freechips.rocketchip.amba.axi4stream._
 import freechips.rocketchip.config._
 import freechips.rocketchip.diplomacy._
-import freechips.rocketchip.regmapper._
 
 // make standalone block for LogMagMux
 trait AXI4StreamMultipleSimpleMagBlocksStandaloneBlock extends AXI4StreamMultipleSimpleMagBlocks[FixedPoint] {
@@ -91,6 +90,6 @@ object MultipleSimpleMagBlocksApp extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
 
-  val mag = LazyModule(new AXI4StreamMultipleSimpleMagBlocks(params) with AXI4StreamMultipleSimpleMagBlocksStandaloneBlock)
-  chisel3.Driver.execute(args, ()=> mag.module)
+  val lazyDut = LazyModule(new AXI4StreamMultipleSimpleMagBlocks(params) with AXI4StreamMultipleSimpleMagBlocksStandaloneBlock)
+  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4StreamMultipleSimpleMagBlocks"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
 }

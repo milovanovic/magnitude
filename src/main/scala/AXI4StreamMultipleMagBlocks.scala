@@ -4,6 +4,8 @@ package magnitude
 
 import chisel3._
 import chisel3.experimental._
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
+
 import dsptools.numbers._
 
 import dspblocks._
@@ -125,6 +127,6 @@ object MultipleMagBlocksApp extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
 
-  val mag = LazyModule(new AXI4StreamMultipleMagBlocks(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4) with AXI4StreamMultipleMagBlocksStandaloneBlock)
-  chisel3.Driver.execute(args, ()=> mag.module)
+  val lazyDut = LazyModule(new AXI4StreamMultipleMagBlocks(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4) with AXI4StreamMultipleMagBlocksStandaloneBlock)
+  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4StreamMultipleMagBlocks"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
 }

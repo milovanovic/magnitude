@@ -8,9 +8,12 @@ import chisel3.experimental._
 
 import dsptools._
 import dsptools.numbers._
-import scala.math._
 
-class MagJPLInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module {
+abstract trait HasCommonInterface extends Module {
+  val io : Bundle
+}
+
+class MagJPLInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module with HasCommonInterface {
   val io = IO(MagMuxIO(params))
   
   val numAddPipes = params.numAddPipes //DspContext.current.numAddPipes
@@ -43,14 +46,14 @@ class MagJPLInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T
     val skidInLast = Wire(Flipped(DecoupledIO(Bool())))
     val skidOutLast = Wire(DecoupledIO(Bool()))
     skidOutLast.ready := io.out.ready
-    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire(), latency, true.B)
+    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire, latency, true.B)
     skidInLast.valid := io.in.valid
     Skid(latency, skidInLast, skidOutLast) := skidInLast.bits
     io.lastOut.get := skidOutLast.bits
   }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module {
+class LogMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module with HasCommonInterface {
   val io = IO(MagMuxIO(params))
   
   val numAddPipes = params.numAddPipes
@@ -129,14 +132,14 @@ class LogMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T
     val skidInLast = Wire(Flipped(DecoupledIO(Bool())))
     val skidOutLast = Wire(DecoupledIO(Bool()))
     skidOutLast.ready := io.out.ready
-    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire(), latency, true.B)
+    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire, latency, true.B)
     skidInLast.valid := io.in.valid
     Skid(latency, skidInLast, skidOutLast) := skidInLast.bits
     io.lastOut.get := skidOutLast.bits
   }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module {
+class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module with HasCommonInterface {
   val io = IO(MagMuxIO(params))
   
   val numAddPipes = params.numAddPipes
@@ -219,14 +222,14 @@ class MagJPLandSQRMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
     val skidInLast = Wire(Flipped(DecoupledIO(Bool())))
     val skidOutLast = Wire(DecoupledIO(Bool()))
     skidOutLast.ready := io.out.ready
-    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire(), latency, true.B)
+    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire, latency, true.B)
     skidInLast.valid := io.in.valid
     Skid(latency, skidInLast, skidOutLast) := skidInLast.bits
     io.lastOut.get := skidOutLast.bits
   }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MagJPLandLogMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module {
+class MagJPLandLogMagInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module with HasCommonInterface {
   val io = IO(MagMuxIO(params))
   
   val numAddPipes = params.numAddPipes
@@ -305,7 +308,7 @@ class MagJPLandLogMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
     val skidInLast = Wire(Flipped(DecoupledIO(Bool())))
     val skidOutLast = Wire(DecoupledIO(Bool()))
     skidOutLast.ready := io.out.ready
-    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire(), latency, true.B)
+    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire, latency, true.B)
     skidInLast.valid := io.in.valid
     Skid(latency, skidInLast, skidOutLast) := skidInLast.bits
     io.lastOut.get := skidOutLast.bits
@@ -316,7 +319,7 @@ class MagJPLandLogMagInst[T <: Data: Real : BinaryRepresentation](val params: MA
  *  LogMagMux block computes power of the input signal (squared magnitude), magnitude using JPL aproximation 
  *  and log2 of the magnitude. Also it can bypass input data depending on selection input signal.
  */
-class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module {
+class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParams[T]) extends Module with HasCommonInterface {
   val io = IO(MagMuxIO(params))
   
   val gen = params.protoIn
@@ -415,7 +418,7 @@ class LogMagMuxInst[T <: Data: Real : BinaryRepresentation](val params: MAGParam
     val skidInLast = Wire(Flipped(DecoupledIO(Bool())))
     val skidOutLast = Wire(DecoupledIO(Bool()))
     skidOutLast.ready := io.out.ready
-    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire(), latency, true.B)
+    skidInLast.bits := ShiftRegister(io.lastIn.get && io.in.fire, latency, true.B)
     skidInLast.valid := io.in.valid
     Skid(latency, skidInLast, skidOutLast) := skidInLast.bits
     io.lastOut.get := skidOutLast.bits

@@ -5,6 +5,7 @@ package magnitude
 import chisel3._
 import chisel3.util._
 import chisel3.experimental._
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 
 import dsptools._
 import dsptools.numbers._
@@ -43,8 +44,6 @@ class MagMuxIO[T <: Data: Real](val params: MAGParams[T]) extends Bundle {
   val out = Decoupled(params.protoOut)
   val sel = if (params.magType == MagJPLandSqrMag || params.magType == MagJPLandLogMag || params.magType == LogMagMux) Some(Input(UInt(2.W))) else None
   val lastOut = if (params.useLast) Some(Output(Bool())) else None
-  
-  override def cloneType: this.type = MagMuxIO(params).asInstanceOf[this.type]
 }
 object MagMuxIO {
   def apply[T <: Data : Real](params: MAGParams[T]): MagMuxIO[T] = new MagMuxIO(params)
@@ -86,7 +85,7 @@ object LogMagMuxApp extends App
     numAddPipes = 1,
     numMulPipes = 1
   )
-  chisel3.Driver.execute(args,()=>new LogMagMuxGenerator(params))
+  (new ChiselStage).execute(Array("--target-dir", "verilog/LogMagMuxGenerator"), Seq(ChiselGeneratorAnnotation(() => new LogMagMuxGenerator(params))))
 }
 
 

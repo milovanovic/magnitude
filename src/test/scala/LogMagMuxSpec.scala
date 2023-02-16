@@ -9,10 +9,11 @@ import dsptools.DspContext
 
 import breeze.math._
 import breeze.linalg.randomDouble
-import org.scalatest.{FlatSpec, Matchers}
 import scala.math._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class LogMagMuxSpec extends FlatSpec with Matchers {
+class LogMagMuxSpec extends AnyFlatSpec with Matchers {
   def test_setup(numSamples: Int): (Seq[Complex], Seq[Seq[Double]]) = {
     val inp = Seq.fill(numSamples) { Complex((randomDouble() * 2 - 1) * 50, (randomDouble() * 2 - 1) * 50) }
     val out : Seq[Seq[Double]] = inp.map {

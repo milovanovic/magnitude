@@ -4,6 +4,7 @@ package magnitude
 
 import chisel3._
 import chisel3.experimental._
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 
 import dsptools.numbers._
 
@@ -86,6 +87,6 @@ object MagBlock extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
 
-  val mag = LazyModule(new MagBlock(params) with MagStandaloneBlock)
-  chisel3.Driver.execute(args, ()=> mag.module)
+  val lazyDut = LazyModule(new MagBlock(params) with MagStandaloneBlock)
+  (new ChiselStage).execute(Array("--target-dir", "verilog/MagBlock"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
 }

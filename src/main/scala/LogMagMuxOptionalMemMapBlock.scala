@@ -4,6 +4,8 @@ package magnitude
 
 import chisel3._
 import chisel3.experimental._
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
+
 import dsptools.numbers._
 
 import dspblocks._
@@ -103,10 +105,11 @@ object LogMagMuxDspBlockWithAXI4 extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
   
-  val mag = LazyModule(new AXI4LogMagMuxBlockOptionalMemMap(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4, hasAXI4 = true) with dspblocks.AXI4StandaloneBlock {
+  val lazyDut = LazyModule(new AXI4LogMagMuxBlockOptionalMemMap(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4, hasAXI4 = true) with dspblocks.AXI4StandaloneBlock {
     override def standaloneParams = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = 1)
   })
-  chisel3.Driver.execute(args, ()=> mag.module) // generate verilog code
+  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4LogMagMuxBlockOptionalMemMap"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
+
 }
 
 object LogMagMuxDspBlockWithoutAXI4 extends App
@@ -124,8 +127,8 @@ object LogMagMuxDspBlockWithoutAXI4 extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
   
-  val mag = LazyModule(new AXI4LogMagMuxBlockOptionalMemMap(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4, hasAXI4 = false) with dspblocks.AXI4StandaloneBlock {
+  val lazyDut = LazyModule(new AXI4LogMagMuxBlockOptionalMemMap(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4, hasAXI4 = false) with dspblocks.AXI4StandaloneBlock {
     override def standaloneParams = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = 1)
   })
-  chisel3.Driver.execute(args, ()=> mag.module) // generate verilog code  
+  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4LogMagMuxBlockOptionalMemMap"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
 }
