@@ -34,13 +34,14 @@ trait AXI4StreamMultipleSimpleMagBlocksStandaloneBlock extends AXI4StreamMultipl
   }
 }
 
-class AXI4StreamMultipleSimpleMagBlocks [T <: Data : Real: BinaryRepresentation] (params: MAGParams[T]) extends LazyModule()(Parameters.empty) {
+class AXI4StreamMultipleSimpleMagBlocks[T <: Data: Real: BinaryRepresentation](params: MAGParams[T])
+    extends LazyModule()(Parameters.empty) {
 
   val dataWidthOut = params.protoOut.getWidth
 
   val streamNode = AXI4StreamNexusNode(
-    masterFn = (ms: Seq[AXI4StreamMasterPortParameters]) =>
-      AXI4StreamMasterPortParameters(ms.map(_.masters).reduce(_ ++ _)),
+    masterFn =
+      (ms: Seq[AXI4StreamMasterPortParameters]) => AXI4StreamMasterPortParameters(ms.map(_.masters).reduce(_ ++ _)),
     slaveFn = ss => {
       AXI4StreamSlavePortParameters(ss.map(_.slaves).reduce(_ ++ _))
     }
@@ -56,17 +57,17 @@ class AXI4StreamMultipleSimpleMagBlocks [T <: Data : Real: BinaryRepresentation]
       val logMagMux = Module(new LogMagMuxGenerator(params))
 
       // Connect inputs
-      logMagMux.io.in.valid    := in.valid
-      logMagMux.io.in.bits     := in.bits.data.asTypeOf(DspComplex(params.protoIn))
-      in.ready                 := logMagMux.io.in.ready
+      logMagMux.io.in.valid := in.valid
+      logMagMux.io.in.bits := in.bits.data.asTypeOf(DspComplex(params.protoIn))
+      in.ready := logMagMux.io.in.ready
       if (params.useLast) {
         logMagMux.io.lastIn.get := in.bits.last
       }
 
       // Connect outputs
-      outs(inIdx).valid              := logMagMux.io.out.valid
-      logMagMux.io.out.ready         := outs(inIdx).ready
-      outs(inIdx).bits.data          := logMagMux.io.out.bits.asUInt
+      outs(inIdx).valid := logMagMux.io.out.valid
+      logMagMux.io.out.ready := outs(inIdx).ready
+      outs(inIdx).bits.data := logMagMux.io.out.bits.asUInt
       if (params.useLast) {
         outs(inIdx).bits.last := logMagMux.io.lastOut.get
       }
@@ -74,14 +75,12 @@ class AXI4StreamMultipleSimpleMagBlocks [T <: Data : Real: BinaryRepresentation]
   }
 }
 
-
-object MultipleSimpleMagBlocksApp extends App
-{
+object MultipleSimpleMagBlocksApp extends App {
   // here just define parameters
-  val params: MAGParams[FixedPoint] =  MAGParams(
-    protoIn  = FixedPoint(16.W, 8.BP),
+  val params: MAGParams[FixedPoint] = MAGParams(
+    protoIn = FixedPoint(16.W, 8.BP),
     protoOut = FixedPoint(20.W, 8.BP),
-    magType  = MagJPL,
+    magType = MagJPL,
     useLast = true,
     numAddPipes = 1,
     numMulPipes = 1
@@ -90,6 +89,11 @@ object MultipleSimpleMagBlocksApp extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
 
-  val lazyDut = LazyModule(new AXI4StreamMultipleSimpleMagBlocks(params) with AXI4StreamMultipleSimpleMagBlocksStandaloneBlock)
-  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4StreamMultipleSimpleMagBlocks"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
+  val lazyDut = LazyModule(
+    new AXI4StreamMultipleSimpleMagBlocks(params) with AXI4StreamMultipleSimpleMagBlocksStandaloneBlock
+  )
+  (new ChiselStage).execute(
+    Array("--target-dir", "verilog/AXI4StreamMultipleSimpleMagBlocks"),
+    Seq(ChiselGeneratorAnnotation(() => lazyDut.module))
+  )
 }

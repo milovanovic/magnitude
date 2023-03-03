@@ -27,7 +27,8 @@ trait MagStandaloneBlock extends MagBlock[FixedPoint] {
   val out = InModuleBody { ioOutNode.makeIO() }
 }
 
-abstract class MagBlock [T <: Data : Real: BinaryRepresentation] (params: MAGParams[T]) extends LazyModule()(Parameters.empty) {
+abstract class MagBlock[T <: Data: Real: BinaryRepresentation](params: MAGParams[T])
+    extends LazyModule()(Parameters.empty) {
 
   require(params.magType == MagJPL || params.magType == LogMag)
 
@@ -40,45 +41,43 @@ abstract class MagBlock [T <: Data : Real: BinaryRepresentation] (params: MAGPar
   )
   val slaveParams = AXI4StreamSlaveParameters()
 
-  val slaveNode  = AXI4StreamSlaveNode(slaveParams)
+  val slaveNode = AXI4StreamSlaveNode(slaveParams)
   val masterNode = AXI4StreamMasterNode(masterParams)
 
   val streamNode = NodeHandle(slaveNode, masterNode)
 
   lazy val module = new LazyModuleImp(this) {
-    val (in, edgeIn)  = slaveNode.in.head
+    val (in, edgeIn) = slaveNode.in.head
     val (out, edgeOut) = masterNode.out.head
 
     //  Log magnitude mux module
     val logMagMux = Module(new LogMagMuxGenerator(params))
 
     // Connect inputs
-    logMagMux.io.in.valid    := in.valid
-    logMagMux.io.in.bits     := in.bits.data.asTypeOf(DspComplex(params.protoIn))
-    in.ready                 := logMagMux.io.in.ready
+    logMagMux.io.in.valid := in.valid
+    logMagMux.io.in.bits := in.bits.data.asTypeOf(DspComplex(params.protoIn))
+    in.ready := logMagMux.io.in.ready
     if (params.useLast) {
       logMagMux.io.lastIn.get := in.bits.last
     }
 
     // Connect outputs
-    out.valid              := logMagMux.io.out.valid
+    out.valid := logMagMux.io.out.valid
     logMagMux.io.out.ready := out.ready
-    out.bits.data          := logMagMux.io.out.bits.asUInt
+    out.bits.data := logMagMux.io.out.bits.asUInt
     if (params.useLast) {
       out.bits.last := logMagMux.io.lastOut.get
     }
   }
 }
 
-
-object MagBlock extends App
-{
+object MagBlock extends App {
   // here just define parameters
-  val params: MAGParams[FixedPoint] =  MAGParams(
-    protoIn  = FixedPoint(16.W, 8.BP),
+  val params: MAGParams[FixedPoint] = MAGParams(
+    protoIn = FixedPoint(16.W, 8.BP),
     protoOut = FixedPoint(20.W, 8.BP),
     protoLog = None,
-    magType  = MagJPL,
+    magType = MagJPL,
     useLast = true,
     numAddPipes = 1,
     numMulPipes = 1
@@ -88,5 +87,6 @@ object MagBlock extends App
   implicit val p: Parameters = Parameters.empty
 
   val lazyDut = LazyModule(new MagBlock(params) with MagStandaloneBlock)
-  (new ChiselStage).execute(Array("--target-dir", "verilog/MagBlock"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
+  (new ChiselStage)
+    .execute(Array("--target-dir", "verilog/MagBlock"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
 }

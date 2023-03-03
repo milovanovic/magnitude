@@ -18,16 +18,18 @@ import freechips.rocketchip.regmapper._
 // make standalone block for LogMagMux
 trait AXI4StreamMultipleMagBlocksStandaloneBlock extends AXI4StreamMultipleMagBlocks[FixedPoint] {
   def standaloneParams = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = 1)
-  val ioMem = mem.map { m => {
-    val ioMemNode = BundleBridgeSource(() => AXI4Bundle(standaloneParams))
+  val ioMem = mem.map { m =>
+    {
+      val ioMemNode = BundleBridgeSource(() => AXI4Bundle(standaloneParams))
 
-    m :=
-      BundleBridgeToAXI4(AXI4MasterPortParameters(Seq(AXI4MasterParameters("bundleBridgeToAXI4")))) :=
-      ioMemNode
+      m :=
+        BundleBridgeToAXI4(AXI4MasterPortParameters(Seq(AXI4MasterParameters("bundleBridgeToAXI4")))) :=
+        ioMemNode
 
-    val ioMem = InModuleBody { ioMemNode.makeIO() }
-    ioMem
-  }}
+      val ioMem = InModuleBody { ioMemNode.makeIO() }
+      ioMem
+    }
+  }
 
   val numIns = 4
 
@@ -49,7 +51,12 @@ trait AXI4StreamMultipleMagBlocksStandaloneBlock extends AXI4StreamMultipleMagBl
   }
 }
 
-abstract class MultipleMagBlocks [T <: Data : Real: BinaryRepresentation, D, U, E, O, B <: Data] (params: MAGParams[T], beatBytes: Int) extends LazyModule()(Parameters.empty) with DspBlock[D, U, E, O, B] with HasCSR {
+abstract class MultipleMagBlocks[T <: Data: Real: BinaryRepresentation, D, U, E, O, B <: Data](
+  params:    MAGParams[T],
+  beatBytes: Int)
+    extends LazyModule()(Parameters.empty)
+    with DspBlock[D, U, E, O, B]
+    with HasCSR {
 
   // this block requires that sel signal is there, no HasCSR when JPL only or Mag Sqr only or LogMag only is set
   require(params.magType == MagJPLandSqrMag || params.magType == MagJPLandLogMag || params.magType == LogMagMux)
@@ -57,8 +64,8 @@ abstract class MultipleMagBlocks [T <: Data : Real: BinaryRepresentation, D, U, 
   val dataWidthOut = params.protoOut.getWidth
 
   val streamNode = AXI4StreamNexusNode(
-    masterFn = (ms: Seq[AXI4StreamMasterPortParameters]) =>
-      AXI4StreamMasterPortParameters(ms.map(_.masters).reduce(_ ++ _)),
+    masterFn =
+      (ms: Seq[AXI4StreamMasterPortParameters]) => AXI4StreamMasterPortParameters(ms.map(_.masters).reduce(_ ++ _)),
     slaveFn = ss => {
       AXI4StreamSlavePortParameters(ss.map(_.slaves).reduce(_ ++ _))
     }
@@ -74,13 +81,16 @@ abstract class MultipleMagBlocks [T <: Data : Real: BinaryRepresentation, D, U, 
 
     val selReg = RegInit(0.U(selRegDataWidth.W))
     val fields = Seq(
-      RegField(selRegDataWidth, selReg,
-        RegFieldDesc(name = "sel", desc = "selection signal for the log magnitude multiplexer")),
+      RegField(
+        selRegDataWidth,
+        selReg,
+        RegFieldDesc(name = "sel", desc = "selection signal for the log magnitude multiplexer")
+      )
       // left for future addition
     )
 
     // Define abstract register map so it can be AXI4, Tilelink, APB, AHB
-    regmap(fields.zipWithIndex.map({ case (f, i) => i * beatBytes -> Seq(f)}): _*)
+    regmap(fields.zipWithIndex.map({ case (f, i) => i * beatBytes -> Seq(f) }): _*)
 
     for ((in, inIdx) <- ins.zipWithIndex) {
       //  Log magnitude mux module
@@ -88,17 +98,17 @@ abstract class MultipleMagBlocks [T <: Data : Real: BinaryRepresentation, D, U, 
       logMagMux.io.sel.get := selReg
 
       // Connect inputs
-      logMagMux.io.in.valid    := in.valid
-      logMagMux.io.in.bits     := in.bits.data.asTypeOf(DspComplex(params.protoIn))
-      in.ready                 := logMagMux.io.in.ready
+      logMagMux.io.in.valid := in.valid
+      logMagMux.io.in.bits := in.bits.data.asTypeOf(DspComplex(params.protoIn))
+      in.ready := logMagMux.io.in.ready
       if (params.useLast) {
         logMagMux.io.lastIn.get := in.bits.last
       }
 
       // Connect outputs
-      outs(inIdx).valid              := logMagMux.io.out.valid
-      logMagMux.io.out.ready         := outs(inIdx).ready
-      outs(inIdx).bits.data          := logMagMux.io.out.bits.asUInt
+      outs(inIdx).valid := logMagMux.io.out.valid
+      logMagMux.io.out.ready := outs(inIdx).ready
+      outs(inIdx).bits.data := logMagMux.io.out.bits.asUInt
       if (params.useLast) {
         outs(inIdx).bits.last := logMagMux.io.lastOut.get
       }
@@ -106,18 +116,32 @@ abstract class MultipleMagBlocks [T <: Data : Real: BinaryRepresentation, D, U, 
   }
 }
 
-class AXI4StreamMultipleMagBlocks[T <: Data : Real: BinaryRepresentation](params: MAGParams[T], address: AddressSet, _beatBytes: Int = 4)(implicit p: Parameters) extends MultipleMagBlocks[T, AXI4MasterPortParameters, AXI4SlavePortParameters, AXI4EdgeParameters, AXI4EdgeParameters, AXI4Bundle](params, _beatBytes) with AXI4DspBlock with AXI4HasCSR {
+class AXI4StreamMultipleMagBlocks[T <: Data: Real: BinaryRepresentation](
+  params:     MAGParams[T],
+  address:    AddressSet,
+  _beatBytes: Int = 4
+)(
+  implicit p: Parameters)
+    extends MultipleMagBlocks[
+      T,
+      AXI4MasterPortParameters,
+      AXI4SlavePortParameters,
+      AXI4EdgeParameters,
+      AXI4EdgeParameters,
+      AXI4Bundle
+    ](params, _beatBytes)
+    with AXI4DspBlock
+    with AXI4HasCSR {
   override val mem = Some(AXI4RegisterNode(address = address, beatBytes = _beatBytes))
 }
 
-object MultipleMagBlocksApp extends App
-{
+object MultipleMagBlocksApp extends App {
   // here just define parameters
-  val params: MAGParams[FixedPoint] =  MAGParams(
-    protoIn  = FixedPoint(16.W, 8.BP),
+  val params: MAGParams[FixedPoint] = MAGParams(
+    protoIn = FixedPoint(16.W, 8.BP),
     protoOut = FixedPoint(20.W, 8.BP),
     protoLog = Some(FixedPoint(16.W, 8.BP)),
-    magType  = MagJPLandLogMag,
+    magType = MagJPLandLogMag,
     log2LookUpWidth = 8,
     useLast = true,
     numAddPipes = 1,
@@ -127,6 +151,12 @@ object MultipleMagBlocksApp extends App
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
 
-  val lazyDut = LazyModule(new AXI4StreamMultipleMagBlocks(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 4) with AXI4StreamMultipleMagBlocksStandaloneBlock)
-  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4StreamMultipleMagBlocks"), Seq(ChiselGeneratorAnnotation(() => lazyDut.module)))
+  val lazyDut = LazyModule(
+    new AXI4StreamMultipleMagBlocks(params, AddressSet(baseAddress + 0x100, 0xff), _beatBytes = 4)
+      with AXI4StreamMultipleMagBlocksStandaloneBlock
+  )
+  (new ChiselStage).execute(
+    Array("--target-dir", "verilog/AXI4StreamMultipleMagBlocks"),
+    Seq(ChiselGeneratorAnnotation(() => lazyDut.module))
+  )
 }
