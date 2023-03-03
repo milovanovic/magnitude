@@ -16,7 +16,7 @@ Interface of the implemented block showing inout signals as well as control regi
 
 For the design where pipeline registers are not used, simple passthrough logic for ready and valid signals is applied. When pipeline registers are included then additional Queues are instatiated at the output of the multiplexer. Simple [Queue](https://www.chisel-lang.org/api/latest/chisel3/util/Queue$.html) modules provide that all data will be processed and interpreted in the correct way. Module LogMagMux is ready to accept new data when ready signal from the output side is not asserted but only specific number of data, equal to the total latency of the design, can be processed (this feature is controled with `initialInDone` signal). When flushing is active, ready signal from the input side is deasserted (signal `last` denotes whether flushing is active or not). If initialization is finished (`initialInDone` is equal to true) and flushing is not active (`last` is false) then ready signal from the input side is equal to the ready signal from the output side.
 
-![Interface of the Mux block](./doc/images/MuxInterface.svg)
+![Interface of the Chisel generator](./doc/images/magnitude_generator.svg)
 
 [comment]: <> (Here goes explanation of the scheme with more details regarding log2 calculation)
 
