@@ -2,7 +2,6 @@ test_run_dir/
 *.fir
 *.json
 *.v
-*.gitmodules
 
 target/
 project/
