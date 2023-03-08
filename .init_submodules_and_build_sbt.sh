@@ -39,5 +39,11 @@ git submodule update --init sims/firesim
 cd ../..
 mv build.txt build.sbt
 
+if [ -d project ]; then
+   echo "Directory project already exists"
+else
+   mkdir project
+fi
+
 # add plugins
 echo -e 'addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.15.0")\naddSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.21")\naddSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.5.3")' > ./project/plugins.sbt
