@@ -47,8 +47,8 @@ Design parameters are defined inside the ` case class MAGParams` given below. An
         case object LogMagMux extends MagType
 
         case class MAGParams[T <: Data](
-              val protoIn:         T, 				      // type of the I/Q components of the input complex data
-              val protoOut:        T, 				      // output data type
+              val protoIn:         T,                     // type of the I/Q components of the input complex data
+              val protoOut:        T,                     // output data type
               val protoLog:        Option[T] = None,      // data type of the log2(magnitude)
               val magType:         MagType = LogMagMux,   // define magnitude type
               val log2LookUpWidth: Int = 16,              // define the address bitwidth for the look-up table
