@@ -1,51 +1,66 @@
-Log-Magnitude Mux Chisel generator
+Chisel Generator of Complex Number Magnitude and its Logarithm
 =======================================================
-
-[![Build Status](https://travis-ci.org/milovanovic/logMagMux.svg?branch=master)](https://travis-ci.org/milovanovic/logMagMux)
 
 ## Overview
 
-This repository contains simple Log-Magnitude Multiplexer written in [Chisel ](https://www.chisel-lang.org/) hardware design language. Proposed design computes squared magnitude of the input complex signal, magnitude, where the complicated square root operation is replaced with JPL aproximation of the square root, and log2 of its value as well.  
-The multiplexer is described with following Scala files available inside`src/main/scala` directory:
-* `LogMagMux.scala` - contains generator parameter definition and `LogMagMux` module.
-* `LogMagMuxDspBlock.scala` - contains description of `LogMagMuxDspBlock`.  
-
-## Interface of the Log-Magnitude Mux
-
-Interface of the implemented block showing inout signals as well as control register for the sel signal of the multiplexer is presented in the figure below. Signals ready/valid are controled in the following way:
-
-For the design where pipeline registers are not used, simple passthrough logic for ready and valid signals is applied. When pipeline registers are included then additional Queues are instatiated at the output of the multiplexer. Simple [Queue](https://www.chisel-lang.org/api/latest/chisel3/util/Queue$.html) modules provide that all data will be processed and interpreted in the correct way. Module LogMagMux is ready to accept new data when ready signal from the output side is not asserted but only specific number of data, equal to the total latency of the design, can be processed (this feature is controled with `initialInDone` signal). When flushing is active, ready signal from the input side is deasserted (signal `last` denotes whether flushing is active or not). If initialization is finished (`initialInDone` is equal to true) and flushing is not active (`last` is false) then ready signal from the input side is equal to the ready signal from the output side.
-
+This repository contains Chisel design generator of complex number magnitude based on JPL approximation and its logarithm. A [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF) is a kind of "alpha max plus beta min" algorithm that can enable high-speed calculation of magnitude both in software and hardware. This method requires only adders and shifters for its implementation therefore, it is particularly suitable for hardware implementations. For calculating log<sub>2</sub> a traditional approach based on Look-Up Table (LUT) is employed. A LUT is filled with predefined values and appropriately addressed during the logarithm calculation.
+Beside magnitude and log<sub>2</sub>(magnitude), generator supports an optional squared magnitude block. A block diagram of this Chisel generator featuring a fully streaming interface and a variety of parametrization options is presented in figure below.
 ![Interface of the Chisel generator](./doc/images/magnitude_generator.svg)
 
-[comment]: <> (Here goes explanation of the scheme with more details regarding log2 calculation)
+The design is mostly described with following Scala files available inside`src/main/scala` directory:
 
-####  Inputs 
+* `LogMagMuxTypes.scala` - contains description of all  `MagTypes` supported in the design.
+* `LogMagMuxGenerator.scala`- contains parameters and interface definition. Furthermore this file has a top level design that checks generator parameters and instantiate  adequate `MagType` .
+* `MagBlock.scala`, `LogMagMuxDspBlock.scala`, `AXI4StreamMultipleSimpleMagBlocks`- are different modules wrapped as `LazyModules` or `DspBlocks` featuring input/output AXI4-stream interface and optional memory-mapped bus (AXI4. APB, AHB, TileLink) for control registers. The latter file contains arbitrarily number of the same magnitude instances, suitable for multiple channels support.
 
-[Decoupled](https://github.com/freechipsproject/chisel3/wiki/Interfaces-Bulk-Connections) interface is used where .bits is input  IQ sample. 
-* `in: Flipped(Decoupled(DspComplex[T]))` - input IQ sample 
-* `sel: UInt(2.W)` -  selection signal used to control output of the multiplexer
-* `lastIn:  Bool`- optional signal, denotes the last sample of the streaming input data
+## Native interface of the generator
+Input/output data interface is actually handshaking Chisel’s decoupled IO interface that consists of ready/valid signals wrapped around inout data. The generator instances support fully streaming processing, meaning that designs can be constantly fed with an input stream with no waiting between two consecutive input sets.
+
+<!---
+Deprecated
+For the design where pipeline registers are not used, simple passthrough logic for ready and valid signals is applied. When pipeline registers are included then additional Queues are instatiated at the output of the multiplexer. Simple [Queue](https://www.chisel-lang.org/api/latest/chisel3/util/Queue$.html) modules provide that all data will be processed and interpreted in the correct way. Module LogMagMux is ready to accept new data when ready signal from the output side is not asserted but only specific number of data, equal to the total latency of the design, can be processed (this feature is controled with `initialInDone` signal). When flushing is active, ready signal from the input side is deasserted (signal `last` denotes whether flushing is active or not). If initialization is finished (`initialInDone` is equal to true) and flushing is not active (`last` is false) then ready signal from the input side is equal to the ready signal from the output side.
+-->
+
+####  Inputs
+
+[Decoupled](https://github.com/freechipsproject/chisel3/wiki/Interfaces-Bulk-Connections) interface is used where .bits is the input complex IQ sample.
+* `in: Flipped(Decoupled(DspComplex[T]))`
+* `sel: UInt(2.W)` - optional selection signal used to control data stream sent to the output
+* `lastIn: Bool`- optional signal that denotes the last sample of the streaming input data
 
 #### Outputs
 
-Decoupled interface is used where .bits is output of the multiplexer.
-* `out: Decoupled(DspComplex[T])` - output of the multiplexer, if bypass mode is not active imaginary part of the complex data is driven to zero
-* `lastOut: Bool` - optional signal, denotes the last sample of the streaming output (it is  the delayed version of the `lastIn` signal) 
+A decoupled interface is used where .bits is the magnitude, log<sub>2</sub>(magnitude) or squared magnitude of the input complex number.
+* `out: Decoupled([T])`
+* `lastOut: Bool` - an optional signal, denotes the last sample of the streaming output (it is the delayed version of the `lastIn` signal)
 
-#### Dsp Block
-
-The  Log Magnitude Mux generator is wrapped as generic DSP block in a diplomatic interface which is actually AXI4-Stream for inputs and outputs and optional memory-mapped bus (TileLink, AXI4, APB or AHB) for control and status registers. Appropriate Chisel code which does above mentioned wrapping is available inside `LogMagMuxDspBlock.scala`.  
 
 ## Parameter settings
 
-Design parameters are defined inside `case class MAGParams`. Users can customize design per use case by setting the appropriate parameters.
-The explanation of each parameter is given below:
-* `proto` - input data type 
-* `log2LookUpWidth` -  number of bits that are input address to look-up table used for log2 calculation
-* `useLast` - simulate AXI4 optional TLAST signal
+Design parameters are defined inside the ` case class MAGParams` given below. An explanation of each parameter is available in the comment column.
 
-Additionally,  number of the pipeline registers (`numAddPipes` and `numMulPipes`) used after +/- and * chisel operators can be parameterized using `DspContext` and features of the dsptools library.  Control and other logic is adjusted to adequately follow pipeline register insertion.
+        sealed trait MagType
+        case object MagJPL extends MagType
+        case object MagJPLandSqrMag extends MagType
+        case object LogMag extends MagType
+        case object MagJPLandLogMag extends MagType
+        case object LogMagMux extends MagType
+
+        case class MAGParams[T <: Data](
+              val protoIn:         T, 				      // type of the I/Q components of the input complex data
+              val protoOut:        T, 				      // output data type
+              val protoLog:        Option[T] = None,      // data type of the log2(magnitude)
+              val magType:         MagType = LogMagMux,   // define magnitude type
+              val log2LookUpWidth: Int = 16,              // define the address bitwidth for the look-up table
+              val useLast:         Boolean = true,        // enable or disable lastIn and lastOut AXI4-stream signals
+              val numAddPipes:     Int = 1,               // number of pipeline registers added after + operation
+              val numMulPipes:     Int = 1,               // number of pipeline registers added after * operation
+              val binPointGrowth:  Int = 0,               // defines binary point growth logic for squared magnitude computation
+              val trimType:        TrimType = RoundHalfUp // specifies how operations like multiplication, trim binary, and div2 should round results
+            ) {
+            }
+
+The number of pipeline registers defines the latency of the particular generator instance.  Control logic inside the design is adjusted to adequately follow pipeline register insertion.
 
 ## Prerequisites
 
@@ -55,24 +70,28 @@ The following software packages should be installed prior to running this projec
 
 ## Setup
 
-Clone this repository, switch directory and run tests:
+Clone this repository, switch directory, initialize all tools and submodules and finally run tests:
 ```
-git clone https://github.com/milovanovic/LogMagMux.git
-cd LogMagMux
+git clone https://github.com/milovanovic/logMagMux.git
+cd logMagMux
+./init_submodules_and_build_sbt.sh
 sbt test
 ```
+
 ## Tests
 
-This repository provides also simple tests which confirm the correct behaviour of the proposed design. Tests are described with following files:
-* `LogMagMuxSpec` - run tester for different parameter configurations 
-* `LogMagMuxTester` - tests log-magnitude mux
+Simple tests that confirm the correct behavior of the proposed design are available inside this repository as well. Tests are described in the following files:
+
+* `LogMagMuxTester` - contains a tester that drives input signals and compares the resulting data stream with expected values
+* `LogMagMuxSpec` - run tester for particular parameter configurations
 
 Tester functions such as `peek`, `poke` and `except`, available inside `DspTester` (check [dsptools Chisel library ](http://github.com/ucb-bar/dsptools)), are extensively used for design testing.
 
+## Additional notes
+Scalafmt code formatter for Scala is used for formatting Chisel code with coding rules defined inside `scalafmt.conf`.
+
 ## TODO
 
-* Made sel signal optional and adjust README file to follow this generator
-* Change block diagram
-* Define logic for saturation and overflow (this is in direct connection with this [pull request](https://github.com/ucb-bar/dsptools/pull/189))
-* Analyze lookUp table width impact on `log2 `calculation precision
+* Check the influence of `trimType` and `binaryGrowth`  parameters configuration on squared magnitude calculation precision.
+* Analyze impact of the  LUT table size on  `log2` calculation precision
 
