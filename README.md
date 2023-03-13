@@ -3,7 +3,7 @@ Chisel Generator of Complex Number Magnitude and its Logarithm
 
 ## Overview
 
-This repository contains Chisel design generator of complex number magnitude based on JPL approximation and its logarithm. A [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF) is a kind of "alpha max plus beta min" algorithm that can enable high-speed calculation of magnitude both in software and hardware. This method requires only adders and shifters for its implementation therefore, it is particularly suitable for hardware implementations. For calculating log<sub>2</sub> a traditional approach based on Look-Up Table (LUT) is employed. A LUT is filled with predefined values and appropriately addressed during the logarithm calculation.
+This repository contains Chisel design generator of complex number magnitude based on JPL approximation and its binary logarithm. A [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF) is a kind of "alpha max plus beta min" algorithm that can enable high-speed calculation of magnitude both in software and hardware. This method requires only adders and shifters for its implementation therefore, it is particularly suitable for hardware implementations. For calculating log<sub>2</sub> a traditional approach based on Look-Up Table (LUT) is employed. A LUT is filled with predefined values and appropriately addressed during the logarithm calculation.
 Beside magnitude and log<sub>2</sub>(magnitude), generator supports an optional squared magnitude block. A block diagram of this Chisel generator featuring a fully streaming interface and a variety of parametrization options is presented in figure below.
 ![Interface of the Chisel generator](./doc/images/magnitude_generator.svg)
 
@@ -56,11 +56,17 @@ Design parameters are defined inside the ` case class MAGParams` given below. An
               val numAddPipes:     Int = 1,               // number of pipeline registers added after + operation
               val numMulPipes:     Int = 1,               // number of pipeline registers added after * operation
               val binPointGrowth:  Int = 0,               // defines binary point growth logic for squared magnitude computation
-              val trimType:        TrimType = RoundHalfUp // specifies how operations like multiplication, trim binary, and div2 should round results
+              val trimType:        TrimType = RoundHalfUp // specifies how operations like multiplication, trim binary, and div2 should round results (RoundHalfUp or better known as neareast)
             ) {
             }
 
 The number of pipeline registers defines the latency of the particular generator instance.  Control logic inside the design is adjusted to adequately follow pipeline register insertion.
+
+A simple demonstration of how different configurations of the parameters influence the magnitude precision is given in the following figures. The first one presents magnitude estimation for different input data bitwidths, and the second presents magnitude estimation for several rounding methods.
+
+![Vary datawidths](./doc/images/mag_vary_datawidths_convergent.png)
+
+![Vary rounding methods](./doc/images/mag_vary_roundings_12.png)
 
 ## Prerequisites
 
@@ -70,13 +76,21 @@ The following software packages should be installed prior to running this projec
 
 ## Setup
 
-Clone this repository, switch directory, initialize all tools and submodules and finally run tests:
+Proposed design generator is intended to be used inside [chipyard](https://github.com/ucb-bar/chipyard) environment as one of the generators located inside `generators/dsp-blocks`. Anyhow, if you want to use this repository standalone then follow instructions bellow:
+
+*  Clone this repository.
+*  Switch directory.
+*  Initialize all tools and submodules.
+*  Compile code, generate verilog or run tests.
 ```
 git clone https://github.com/milovanovic/logMagMux.git
 cd logMagMux
 ./init_submodules_and_build_sbt.sh
 sbt test
 ```
+#### Note
+The shell script `init_submodules_and_build_sbt.sh`, initializes all tools and generators required to run this project. Beside that, it initializes `bulid.sbt` with all correctly defined dependencies. Versions of tools and generators correspond to chipyard 1.8.1 release. The user can replace versions by changing corresponding checkout commits inside the same script.
+The shell script `remove_submodules.sh` executes commands that reverse the commands listed in `init_submodules_and_build_sbt.sh`.
 
 ## Tests
 
@@ -94,4 +108,3 @@ Scalafmt code formatter for Scala is used for formatting Chisel code with coding
 
 * Check the influence of `trimType` and `binaryGrowth`  parameters configuration on squared magnitude calculation precision.
 * Analyze impact of the  LUT table size on  `log2` calculation precision
-
