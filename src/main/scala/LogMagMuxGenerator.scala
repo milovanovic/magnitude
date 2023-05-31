@@ -54,6 +54,8 @@ object MagMuxIO {
 class LogMagMuxGenerator[T <: Data: Real: BinaryRepresentation](val params: MAGParams[T]) extends Module {
   val io = IO(MagMuxIO(params))
 
+  override def desiredName = if (params.protoLog == None) params.magType.toString + "_input_width_" + params.protoIn.getWidth.toString else params.magType.toString + "_input_width_" + params.protoIn.getWidth.toString + "_log_table_" + params.log2LookUpWidth.toString
+
   val magModule = params.magType match {
     case MagJPL          => Module(new MagJPLInst(params))
     case LogMag          => Module(new LogMagInst(params))
@@ -79,7 +81,7 @@ object LogMagMuxApp extends App {
     protoIn = FixedPoint(16.W, 14.BP),
     protoOut = FixedPoint(16.W, 14.BP),
     protoLog = Some(FixedPoint(16.W, 14.BP)),
-    magType = LogMag,
+    magType = MagJPLandLogMag,//LogMag,
     log2LookUpWidth = 12,
     useLast = true,
     numAddPipes = 1,
