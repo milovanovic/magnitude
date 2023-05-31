@@ -252,7 +252,7 @@ class MagJPLandSQRMagInst[T <: Data: Real: BinaryRepresentation](val params: MAG
   val output = Wire(params.protoOut.cloneType)
 
   output := MuxLookup(
-    ShiftRegister(io.sel.get, latency, en = true.B),
+    ShiftRegister(io.sel.get, latency, true.B),
     jplMag,
     Array(
       0.U -> magSqr, //trimMagSqr,//.asTypeOf(params.protoOut),
@@ -351,7 +351,7 @@ class MagJPLandLogMagInst[T <: Data: Real: BinaryRepresentation](val params: MAG
   log2Mag := ShiftRegister(logSInt.asFixedPoint(0.BP), numAddPipes, true.B) + logFrac
 
   val output = Wire(params.protoOut.cloneType)
-  output := MuxLookup(ShiftRegister(io.sel.get, latency, en = true.B), jplMag, Array(0.U -> jplMag, 1.U -> log2Mag))
+  output := MuxLookup(ShiftRegister(io.sel.get, latency, true.B), jplMag, Array(0.U -> jplMag, 1.U -> log2Mag))
 
   val skidInData = Wire(io.out.cloneType)
   skidInData.bits := output
@@ -481,7 +481,7 @@ class LogMagMuxInst[T <: Data: Real: BinaryRepresentation](val params: MAGParams
   val output = Wire(params.protoOut.cloneType)
 
   output := MuxLookup(
-    ShiftRegister(io.sel.get, latency, en = true.B),
+    ShiftRegister(io.sel.get, latency, true.B),
     jplMag,
     Array(
       0.U -> magSqr, //trimMagSqr.asTypeOf(params.protoOut),

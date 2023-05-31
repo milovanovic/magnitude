@@ -9,8 +9,9 @@ import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 import dsptools.numbers._
 
 import freechips.rocketchip.amba.axi4stream._
-import freechips.rocketchip.config._
 import freechips.rocketchip.diplomacy._
+
+import org.chipsalliance.cde.config.Parameters
 
 trait MagStandaloneBlock extends MagBlock[FixedPoint] {
 
