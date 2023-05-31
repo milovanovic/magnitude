@@ -46,4 +46,4 @@ else
 fi
 
 # add plugins
-echo -e 'addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.15.0")\naddSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.21")\naddSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.5.3")' > ./project/plugins.sbt
+echo -e 'addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.15.0")\naddSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.21")\naddSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.5.3")\naddSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.0")\naddSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.3")' > ./project/plugins.sbt

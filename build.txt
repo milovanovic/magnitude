@@ -64,6 +64,7 @@ lazy val chiselSettings = Seq(
   "org.apache.commons" % "commons-text" % "1.9"),
   addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % chiselVersion cross CrossVersion.full))
 
+scalafmtOnCompile := true
 
 val firrtlVersion = "1.5.1"
 lazy val firrtlSettings = Seq(libraryDependencies ++= Seq("edu.berkeley.cs" %% "firrtl" % firrtlVersion))
