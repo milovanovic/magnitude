@@ -212,15 +212,13 @@ class SqrMagSQNRSpec extends AnyFlatSpec with Matchers {
     }
   }
 
-  println(sqnr_results32)
+  // println(sqnr_results32)
 
-  println("sqnr24 - sqnr16 is")
-  println(sqnr_results24 - sqnr_results16)
+  // println("sqnr24 - sqnr16 is")
+  // println(sqnr_results24 - sqnr_results16)
 
-  println("sqnr32 - sqnr24 is")
-  println(sqnr_results32 - sqnr_results24)
+  // println("sqnr32 - sqnr24 is")
+  // println(sqnr_results32 - sqnr_results24)
 
   val durationTest1 = (System.nanoTime - t1) / 1e9d
-  println(s"The execution time of the data width sqnr analysis is $durationTest1 s")
-
 }
