@@ -4,7 +4,7 @@ Chisel Generator of Complex Number Magnitude and its Logarithm
 ## Overview
 
 This repository contains Chisel design generator of complex number magnitude based on JPL approximation and its binary logarithm. A [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF) is a kind of "alpha max plus beta min" algorithm that can enable high-speed calculation of magnitude both in software and hardware. This method requires only adders and shifters for its implementation therefore, it is particularly suitable for hardware implementations. For calculating log<sub>2</sub> a traditional approach based on Look-Up Table (LUT) is employed. A LUT is filled with predefined values and appropriately addressed during the logarithm calculation.
-Beside magnitude and log<sub>2</sub>(magnitude), generator supports an optional squared magnitude block. A block diagram of this Chisel generator featuring a fully streaming interface and a variety of parametrization options is presented in figure below.
+Besides magnitude and log<sub>2</sub>(magnitude), generator supports an optional squared magnitude block. A block diagram of this Chisel generator featuring a fully streaming interface and a variety of parametrization options is presented in figure below.
 ![Interface of the Chisel generator](./doc/images/magnitude_generator.svg)
 
 The design is mostly described with following Scala files available inside`src/main/scala` directory:
@@ -39,26 +39,26 @@ A decoupled interface is used where .bits is the magnitude, log<sub>2</sub>(magn
 
 Design parameters are defined inside the ` case class MAGParams` given below. An explanation of each parameter is available in the comment column.
 
-        sealed trait MagType
-        case object MagJPL extends MagType
-        case object MagJPLandSqrMag extends MagType
-        case object LogMag extends MagType
-        case object MagJPLandLogMag extends MagType
-        case object LogMagMux extends MagType
+    sealed trait MagType
+    case object MagJPL extends MagType
+    case object MagJPLandSqrMag extends MagType
+    case object LogMag extends MagType
+    case object MagJPLandLogMag extends MagType
+    case object LogMagMux extends MagType
 
-        case class MAGParams[T <: Data](
-              val protoIn:         T,                     // type of the I/Q components of the input complex data
-              val protoOut:        T,                     // output data type
-              val protoLog:        Option[T] = None,      // data type of the log2(magnitude)
-              val magType:         MagType = LogMagMux,   // define magnitude type
-              val log2LookUpWidth: Int = 16,              // define the address bitwidth for the look-up table
-              val useLast:         Boolean = true,        // enable or disable lastIn and lastOut AXI4-stream signals
-              val numAddPipes:     Int = 1,               // number of pipeline registers added after + operation
-              val numMulPipes:     Int = 1,               // number of pipeline registers added after * operation
-              val binPointGrowth:  Int = 0,               // defines binary point growth logic for squared magnitude computation
-              val trimType:        TrimType = RoundHalfUp // specifies how operations like multiplication, trim binary, and div2 should round results (RoundHalfUp or better known as neareast)
-            ) {
-            }
+    case class MAGParams[T <: Data](
+      val protoIn:         T,                     // type of the I/Q components of the input complex data
+      val protoOut:        T,                     // output data type
+      val protoLog:        Option[T] = None,      // data type of the log2(magnitude)
+      val magType:         MagType = LogMagMux,   // define magnitude type
+      val log2LookUpWidth: Int = 16,              // define the address bitwidth for the look-up table
+      val useLast:         Boolean = true,        // enable or disable lastIn and lastOut AXI4-stream signals
+      val numAddPipes:     Int = 1,               // number of pipeline registers added after + operation
+      val numMulPipes:     Int = 1,               // number of pipeline registers added after * operation
+      val binPointGrowth:  Int = 0,               // defines binary point growth logic for squared magnitude computation
+      val trimType:        TrimType = RoundHalfUp // specifies how operations like multiplication, trim binary, and div2 should round results (RoundHalfUp or better known as neareast)
+    ) {
+    }
 
 The number of pipeline registers defines the latency of the particular generator instance.  Control logic inside the design is adjusted to adequately follow pipeline register insertion.
 
@@ -83,13 +83,13 @@ Proposed design generator is intended to be used inside [chipyard](https://githu
 *  Initialize all tools and submodules.
 *  Compile code, generate verilog or run tests.
 ```
-git clone https://github.com/milovanovic/logMagMux.git
-cd logMagMux
+git clone https://github.com/milovanovic/magnitude.git
+cd magnitude
 ./init_submodules_and_build_sbt.sh
 sbt test
 ```
 #### Note
-The shell script `init_submodules_and_build_sbt.sh`, initializes all tools and generators required to run this project. Beside that, it initializes `bulid.sbt` with all correctly defined dependencies. Versions of tools and generators correspond to chipyard 1.8.1 release. The user can replace versions by changing corresponding checkout commits inside the same script.
+The shell script `init_submodules_and_build_sbt.sh`, initializes all tools and generators required to run this project. Besides that, it initializes `bulid.sbt` with all correctly defined dependencies. Versions of tools and generators correspond to chipyard 1.8.1 release. The user can replace versions by changing corresponding checkout commits inside the same script.
 The shell script `remove_submodules.sh` executes commands that reverse the commands listed in `init_submodules_and_build_sbt.sh`.
 
 ## Tests
