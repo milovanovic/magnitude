@@ -1,6 +1,8 @@
 Design Generator of Complex Number Magnitude and its Logarithm
 =======================================================
 
+[![Build](https://github.com/milovanovic/magnitude/actions/workflows/test.yml/badge.svg)](https://github.com/milovanovic/magnitude/actions/workflows/test.yml)
+
 This repository contains design generator of complex number magnitude estimators based on [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF). Design generator can provide high-performance binary logarithm calculation as well.
 
 ## Documentation
