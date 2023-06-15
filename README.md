@@ -28,7 +28,7 @@ The following software packages should be installed prior to running this projec
 
 ## Setup
 
-Proposed design generator is intended to be used inside [chipyard](https://github.com/ucb-bar/chipyard) environment as one of the generators located inside `generators/dsp-blocks`. Anyhow, if you want to use this repository standalone then follow instructions bellow:
+Proposed design generator is intended to be used inside [chipyard](https://github.com/ucb-bar/chipyard) environment as one of the generators located inside `generators/dsp-blocks`. Anyhow, if you want to use this repository standalone then follow instructions below:
 
 *  Clone this repository.
 *  Switch directory.
@@ -37,11 +37,11 @@ Proposed design generator is intended to be used inside [chipyard](https://githu
 ```
 git clone https://github.com/milovanovic/magnitude.git
 cd magnitude
-./init_submodules_and_build_sbt.sh
+./scripts/init_submodules_and_build_sbt.sh
 sbt test
 ```
 #### Note
-The shell script `init_submodules_and_build_sbt.sh`, initializes all tools and generators required to run this project. Besides that, it initializes `bulid.sbt` with all correctly defined dependencies. Versions of tools and generators correspond to chipyard 1.9.1 release. The user can replace versions by changing corresponding checkout commits inside the same script.
+The shell script `init_submodules_and_build_sbt.sh`, initializes all tools and generators required to run this project. Besides that, it initializes `bulid.sbt` with all correctly defined dependencies. Versions of tools and generators correspond to chipyard 1.9.1 release, only `rocket-dsp-utils` differs and it is set to the newest commit. The user can replace versions by changing the corresponding checkout commits inside the same script.
 The shell script `remove_submodules.sh` executes commands that reverse the commands listed in `init_submodules_and_build_sbt.sh`.
 
 ## Guide For New Contributors
