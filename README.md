@@ -1,7 +1,7 @@
 Design Generator of Complex Number Magnitude and its Logarithm
 =======================================================
 
-This repository contains Chisel design generator of complex number magnitude based on JPL approximation and its binary logarithm.
+This repository contains design generator of complex number magnitude estimators based on [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF). Design generator can provide high-performance binary logarithm calculation as well.
 
 ## Documentation
 
