@@ -5,7 +5,7 @@ Chisel Generator of Complex Number Magnitude and its Logarithm
 
 This repository contains Chisel design generator of complex number magnitude based on JPL approximation and its binary logarithm. A [JPL approximation](https://ipnpr.jpl.nasa.gov/progress_report/42-40/40L.PDF) is a kind of "alpha max plus beta min" algorithm that can enable high-speed calculation of magnitude both in software and hardware. This method requires only adders and shifters for its implementation therefore, it is particularly suitable for hardware implementations. For calculating log<sub>2</sub> a traditional approach based on Look-Up Table (LUT) is employed. A LUT is filled with predefined values and appropriately addressed during the logarithm calculation.
 Beside magnitude and log<sub>2</sub>(magnitude), generator supports an optional squared magnitude block. A block diagram of this Chisel generator featuring a fully streaming interface and a variety of parametrization options is presented in figure below.
-![Interface of the Chisel generator](./images/magnitude_generator.svg)
+![Interface of the Chisel generator](./images/svg/magnitude_generator.svg)
 
 The design is mostly described with following Scala files available inside`src/main/scala` directory:
 
@@ -63,9 +63,9 @@ The number of pipeline registers defines the latency of the particular generator
 
 A simple demonstration of how different configurations of the parameters influence the magnitude precision is given in the following figures. The first one presents magnitude estimation for different input data bitwidths, and the second presents magnitude estimation for several rounding methods.
 
-![Vary datawidths](./images/mag_vary_datawidths_convergent.png)
+![Vary datawidths](./images/png/mag_vary_datawidths_convergent.png)
 
-![Vary rounding methods](./images/mag_vary_roundings_12.png)
+![Vary rounding methods](./images/png/mag_vary_roundings_12.png)
 
 ## Tests
 
