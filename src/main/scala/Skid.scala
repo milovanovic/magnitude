@@ -4,7 +4,7 @@ package magnitude
 
 import chisel3._
 import chisel3.internal.requireIsHardware
-import chisel3.util.{log2Ceil, DecoupledIO, Queue, ShiftRegister, TransitName}
+import chisel3.util.{log2Ceil, DecoupledIO, Queue, ShiftRegister}
 
 // This code is taken from https://github.com/grebe/ofdm/blob/e89ae943c3525a2c932b3103055cc7bb20f18987/src/main/scala/ofdm/Skid.scala and adjusted to our design
 
@@ -25,7 +25,7 @@ object Skid {
     val queueCounter = RegInit(0.U(log2Ceil(latency + 1).W))
     queueCounter := queueCounter +& in.fire -& out.fire
     queueCounter.suggestName("queueCounter")
-    queue.io.enq.valid := ShiftRegister(in.fire, latency, resetData = false.B, en = en)
+    queue.io.enq.valid := ShiftRegister(in.fire, latency, false.B, en)
     //assert(!queue.io.enq.valid || queue.io.enq.ready) // we control in.ready such that the queue can't fill up!
 
     in.ready := (queueCounter < latencyToDelay.U) || (queueCounter === latencyToDelay.U && out.ready)
@@ -33,6 +33,6 @@ object Skid {
     out.valid := queue.io.deq.valid
     out.bits := queue.io.deq.bits
 
-    TransitName(queue.io.enq.bits, out)
+    queue.io.enq.bits //, out
   }
 }

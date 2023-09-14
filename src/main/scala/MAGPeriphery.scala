@@ -2,9 +2,10 @@
 
 package magnitude
 
-import chisel3._
+import chisel3.{fromDoubleToLiteral => _, fromIntToBinaryPoint => _, _}
 import chisel3.util._
-import chisel3.experimental.{DataMirror, FixedPoint}
+import fixedpoint._
+import chisel3.experimental.DataMirror
 
 import freechips.rocketchip.amba.axi4._
 import freechips.rocketchip.amba.axi4stream._

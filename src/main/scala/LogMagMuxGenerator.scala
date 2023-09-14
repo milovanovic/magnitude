@@ -2,9 +2,9 @@
 
 package magnitude
 
-import chisel3._
+import chisel3.{fromDoubleToLiteral => _, fromIntToBinaryPoint => _, _}
 import chisel3.util._
-import chisel3.experimental._
+import fixedpoint._
 import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 
 import dsptools._
@@ -28,10 +28,10 @@ case class MAGParams[T <: Data](
   val useLast:         Boolean = true, // use lastIn and lastOut AXI signals
   val numAddPipes:     Int = 1, // number of pipeline registers after + operation
   val numMulPipes:     Int = 1, // number of pipeline registers after * operation
-  val binPointGrowth:  Int = 0, // this is of the intereset for squared magnitude calculations
+  val binPointGrowth:  Int = 0, // this is of the interest for squared magnitude calculations
   val trimType:        TrimType = RoundHalfUp // TrimType - used for div2 and trimBinary
 ) {
-  requireIsChiselType(protoIn)
+//  requireIsChiselType(protoIn)
   if (((magType == LogMag) || (magType == LogMagMux) || (magType == MagJPLandLogMag))) {
     require(!protoLog.isEmpty, s"The chosen mag type requires that protoLog is defined")
   }

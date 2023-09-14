@@ -2,10 +2,9 @@
 
 package magnitude
 
-import chisel3._
+import chisel3.{fromDoubleToLiteral => _, fromIntToBinaryPoint => _, _}
 import chisel3.util._
-import chisel3.experimental._
-
+import fixedpoint._
 import dsptools._
 import dsptools.numbers._
 import chisel3.util.experimental.loadMemoryFromFileInline
@@ -97,8 +96,8 @@ class LogMagInst[T <: Data: Real: BinaryRepresentation](val params: MAGParams[T]
 
   val jplMag = Real[T].max(jplMagOp1, jplMagOp2)
 
-  val logUInt = Log2(jplMag.asUInt())
-  val logSInt = (logUInt - bpos.U).asSInt()
+  val logUInt = Log2(jplMag.asUInt)
+  val logSInt = (logUInt - bpos.U).asSInt
 
   // log(N) = k + log2(1 + f)
   // N = 2^k(1 + f)
@@ -134,7 +133,7 @@ class LogMagInst[T <: Data: Real: BinaryRepresentation](val params: MAGParams[T]
   }*/
 
   val noLeadOne = ShiftRegister(
-    (jplMag.asUInt() - BinaryRepresentation[UInt].shl(1.U, logUInt).asTypeOf(jplMag.asUInt)),
+    (jplMag.asUInt - BinaryRepresentation[UInt].shl(1.U, logUInt).asTypeOf(jplMag.asUInt)),
     numAddPipes,
     true.B
   )
@@ -251,9 +250,7 @@ class MagJPLandSQRMagInst[T <: Data: Real: BinaryRepresentation](val params: MAG
 
   val output = Wire(params.protoOut.cloneType)
 
-  output := MuxLookup(
-    ShiftRegister(io.sel.get, latency, true.B),
-    jplMag,
+  output := shadow.MuxLookup(ShiftRegister(io.sel.get, latency, true.B), jplMag)(
     Array(
       0.U -> magSqr, //trimMagSqr,//.asTypeOf(params.protoOut),
       1.U -> jplMag
@@ -317,8 +314,8 @@ class MagJPLandLogMagInst[T <: Data: Real: BinaryRepresentation](val params: MAG
   val jplMagtmp = Real[T].max(jplMagOp1, jplMagOp2)
   val jplMag = ShiftRegister(jplMagtmp, latency - jplMagLatency, true.B)
 
-  val logUInt = Log2(jplMagtmp.asUInt())
-  val logSInt = (logUInt - bpos.U).asSInt()
+  val logUInt = Log2(jplMagtmp.asUInt)
+  val logSInt = (logUInt - bpos.U).asSInt
 
   val logLookUp = VecInit({
     val lnOf2 = scala.math.log(2) // natural log of 2
@@ -336,7 +333,7 @@ class MagJPLandLogMagInst[T <: Data: Real: BinaryRepresentation](val params: MAG
   })
 
   val noLeadOne = ShiftRegister(
-    (jplMagtmp.asUInt() - BinaryRepresentation[UInt].shl(1.U, logUInt).asTypeOf(jplMagtmp.asUInt)),
+    (jplMagtmp.asUInt - BinaryRepresentation[UInt].shl(1.U, logUInt).asTypeOf(jplMagtmp.asUInt)),
     numAddPipes,
     true.B
   )
@@ -351,7 +348,9 @@ class MagJPLandLogMagInst[T <: Data: Real: BinaryRepresentation](val params: MAG
   log2Mag := ShiftRegister(logSInt.asFixedPoint(0.BP), numAddPipes, true.B) + logFrac
 
   val output = Wire(params.protoOut.cloneType)
-  output := MuxLookup(ShiftRegister(io.sel.get, latency, true.B), jplMag, Array(0.U -> jplMag, 1.U -> log2Mag))
+  output := shadow.MuxLookup(ShiftRegister(io.sel.get, latency, true.B), jplMag)(
+    Array(0.U -> jplMag.asTypeOf(output), 1.U -> log2Mag.asTypeOf(output))
+  )
 
   val skidInData = Wire(io.out.cloneType)
   skidInData.bits := output
@@ -441,8 +440,8 @@ class LogMagMuxInst[T <: Data: Real: BinaryRepresentation](val params: MAGParams
   // log(N) = k + log2(1 + f)
   // N = 2^k(1 + f)
 
-  val logUInt = Log2(jplMagtmp.asUInt()) // log2(jplMag.asUInt()(dataWidth-1, binPoint-1))
-  val logSInt = (logUInt - bpos.U).asSInt()
+  val logUInt = Log2(jplMagtmp.asUInt) // log2(jplMag.asUInt(dataWidth-1, binPoint-1))
+  val logSInt = (logUInt - bpos.U).asSInt
 
   val logLookUp = VecInit({
     val lnOf2 = scala.math.log(2)
@@ -460,7 +459,7 @@ class LogMagMuxInst[T <: Data: Real: BinaryRepresentation](val params: MAGParams
   })
 
   val noLeadOne = ShiftRegister(
-    (jplMagtmp.asUInt() - BinaryRepresentation[UInt].shl(1.U, logUInt).asTypeOf(jplMagtmp.asUInt)),
+    (jplMagtmp.asUInt - BinaryRepresentation[UInt].shl(1.U, logUInt).asTypeOf(jplMagtmp.asUInt)),
     numAddPipes,
     true.B
   )
@@ -480,13 +479,11 @@ class LogMagMuxInst[T <: Data: Real: BinaryRepresentation](val params: MAGParams
 
   val output = Wire(params.protoOut.cloneType)
 
-  output := MuxLookup(
-    ShiftRegister(io.sel.get, latency, true.B),
-    jplMag,
+  output := shadow.MuxLookup(ShiftRegister(io.sel.get, latency, true.B), jplMag)(
     Array(
-      0.U -> magSqr, //trimMagSqr.asTypeOf(params.protoOut),
-      1.U -> jplMag,
-      2.U -> log2Mag
+      0.U -> magSqr.asTypeOf(output), //trimMagSqr.asTypeOf(params.protoOut),
+      1.U -> jplMag.asTypeOf(output),
+      2.U -> log2Mag.asTypeOf(output)
     )
   )
 

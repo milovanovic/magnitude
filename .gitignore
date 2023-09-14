@@ -6,3 +6,5 @@ test_run_dir/
 target/
 project/
 build.sbt
+
+.idea

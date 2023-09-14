@@ -2,17 +2,16 @@
 
 package magnitude
 
-import chisel3._
-import chisel3.experimental._
+import chisel3.{fromDoubleToLiteral => _, fromIntToBinaryPoint => _, _}
+import chisel3.util._
+import fixedpoint._
 import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
-
 import dsptools.numbers._
 
 import freechips.rocketchip.amba.axi4stream._
 import freechips.rocketchip.diplomacy._
 
 import org.chipsalliance.cde.config.Parameters
-
 trait MagStandaloneBlock extends MagBlock[FixedPoint] {
 
   val ioInNode = BundleBridgeSource(() => new AXI4StreamBundle(AXI4StreamBundleParameters(n = 2)))
