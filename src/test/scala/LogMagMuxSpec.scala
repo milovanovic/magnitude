@@ -48,7 +48,7 @@ class LogMagMuxSpec extends AnyFlatSpec with ChiselScalatestTester {
     test(new LogMagMuxGenerator(base_params))
       .withAnnotations(Seq(WriteVcdAnnotation, VerilatorBackendAnnotation))
       .runPeekPoke(new LogMagMuxTester(_) {
-        testMux(inp, out, 6)
+        testMux(inp, out)
       })
   }
 //
@@ -86,7 +86,7 @@ class LogMagMuxSpec extends AnyFlatSpec with ChiselScalatestTester {
         test(new LogMagMuxGenerator(base_params))
           .withAnnotations(Seq(WriteVcdAnnotation, VerilatorBackendAnnotation))
           .runPeekPoke(new LogMagMuxTester(_) {
-            testStream(inp, sel, outLogMag, 6)
+            testStream(inp, sel, outLogMag)
           })
         //        FixedMagTester(base_params, inp, outLogMag, sel, 8) should be(true)
       }

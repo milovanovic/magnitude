@@ -17,7 +17,7 @@ case class LogMagMuxTesterBase[T <: Data](override val dut: LogMagMuxGenerator[T
 
 class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends LogMagMuxTesterBase(dut) {
 
-  def testMux(inp: Seq[Complex], out: Seq[Seq[Double]], tolLSBs: Int = 3) {
+  def testMux(inp: Seq[Complex], out: Seq[Seq[Double]], tolLSBs: Double = 0.04) {
     require(dut.params.magType == LogMagMux, "This test requires that magType is LogMagMux")
     val numAddPipes = dut.params.numAddPipes
     val numMulPipes = dut.params.numMulPipes
@@ -59,7 +59,7 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends LogMagMuxTe
           case uInt: UInt => expect(dut.io.out.bits, value(0))
           case sInt: SInt => expect(dut.io.out.bits, value(0))
           case _ =>
-            assert(abs(value(0) - peek(dut.io.out.bits)) <= 6, "Mismatch!!!")
+            assert(abs(value(0) - peek(dut.io.out.bits)) <= tolLSBs, "Mismatch!!!")
         }
         //fixTolLSBs.withValue(6) { expect(dut.io.out.bits, value(0)) }
         println("JPL magnitude:")
@@ -82,7 +82,7 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends LogMagMuxTe
           case uInt: UInt => expect(dut.io.out.bits, value(2) * mulLog)
           case sInt: SInt => expect(dut.io.out.bits, value(2) * mulLog)
           case _ =>
-            assert(abs(value(2) - peek(dut.io.out.bits)) <= 6, "Mismatch!!!")
+            assert(abs(value(2) - peek(dut.io.out.bits)) <= tolLSBs, "Mismatch!!!")
         }
         //fixTolLSBs.withValue(tolLSBs) { expect(dut.io.out.bits, value(2) * mulLog) }
         step(1)
@@ -91,7 +91,7 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends LogMagMuxTe
     poke(dut.io.out.ready, 0)
   }
 
-  def testStream(inp: Seq[Complex], sel: Int, out: Seq[Double], tolLSBs: Int = 3) {
+  def testStream(inp: Seq[Complex], sel: Int, out: Seq[Double], tolLSBs: Double = 0.06) {
     require(dut.params.useLast, "This test must have included lastIn and lastOut signal")
 
     val genIn = dut.params.protoIn
@@ -232,7 +232,7 @@ class LogMagMuxTester[T <: Data](dut: LogMagMuxGenerator[T]) extends LogMagMuxTe
     cntValidOut = 0
   }
 
-  def testStreamCollectOut(inp: Seq[Complex], sel: Int, out: Seq[Double], tolLSBs: Int = 3): Seq[Double] = {
+  def testStreamCollectOut(inp: Seq[Complex], sel: Int, out: Seq[Double], tolLSBs: Double = 0.005): Seq[Double] = {
     require(dut.params.useLast, "This test must have included lastIn and lastOut signal")
     var collectedOut = Seq[Double]()
     val genIn = dut.params.protoIn
